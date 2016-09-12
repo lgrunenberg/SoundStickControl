@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
 
 #define USB_CLASS_AUDIO                1
@@ -43,30 +44,44 @@
 
 
 
-
-
 static struct libusb_device_handle *devh = NULL;
 
 int16_t get_int16(int8_t requestType, int8_t request, int8_t channel) {
 	int16_t retval = 0;
- libusb_control_transfer(devh,
- 		LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | 0x80,
-		requestType, request << 8 | channel, 2<<8, 
-		(unsigned char *)&retval, sizeof(int16_t), 1000);
-		return retval;
+	libusb_control_transfer(devh,
+ 	LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | 0x80,
+	requestType, request << 8 | channel, 2<<8, 
+	(unsigned char *)&retval, sizeof(int16_t), 1000);
+	return retval;
 	
 }
 
 int8_t get_int8(int8_t requestType, int8_t request, int8_t channel) {
 	int8_t retval = 0;
- libusb_control_transfer(devh,
- 		LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | 0x80,
-		requestType, request << 8 | channel, 2<<8, 
-		(unsigned char *)&retval, sizeof(int8_t), 1000);
-		return retval;
+	libusb_control_transfer(devh,
+ 	LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | 0x80,
+	requestType, request << 8 | channel, 2<<8, 
+	(unsigned char *)&retval, sizeof(int8_t), 1000);
+	return retval;
 }
 
-int main(void) {
+void set_int8(int8_t requestType, int8_t request, int8_t channel, int8_t value) {
+	libusb_control_transfer(devh,
+ 	LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
+	requestType, request << 8 | channel, 2<<8, 
+	(unsigned char *)&value, sizeof(int8_t), 1000);
+}
+
+void set_int16(int8_t requestType, int8_t request, int8_t channel, int16_t value) {
+	libusb_control_transfer(devh,
+ 	LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
+	requestType, request << 8 | channel, 2<<8, 
+	(unsigned char *)&value, sizeof(int16_t), 1000);
+}
+
+int main(int argc, char *argv[]) {
+	
+
 	
 	libusb_context *ctx;
 	if (libusb_init(&ctx) < 0)
@@ -79,6 +94,31 @@ int main(void) {
 	}
 	
 	printf("Found Sound Sticks\n");
+	
+	if(argc == 3) {
+		if(0 == strncmp(argv[1], "treble", 6)) {
+			int8_t newValue = atoi(argv[2]);
+			set_int8(USB_REQUEST_UAC_SET_CUR, UAC_TREBLE_CONTROL, 0, newValue);
+		}
+		if(0 == strncmp(argv[1], "bass", 4)) {
+			int8_t newValue = atoi(argv[2]);
+			set_int8(USB_REQUEST_UAC_SET_CUR, UAC_BASS_CONTROL, 0, newValue);
+		}
+		if(0 == strncmp(argv[1], "bassboost", 9)) {
+			int8_t newValue = atoi(argv[2]);
+			set_int8(USB_REQUEST_UAC_SET_CUR, UAC_BASSBOOST_CONTROL, 0, newValue);
+		}
+		if(0 == strncmp(argv[1], "agc", 3)) {
+			int8_t newValue = atoi(argv[2]);
+			set_int8(USB_REQUEST_UAC_SET_CUR, UAC_AGC_CONTROL, 0, newValue);
+		}
+		if(0 == strncmp(argv[1], "volume", 6)) {
+			int16_t newValue = atoi(argv[2]);
+			set_int16(USB_REQUEST_UAC_SET_CUR, UAC_VOLUME_CONTROL, 1, newValue);
+			set_int16(USB_REQUEST_UAC_SET_CUR, UAC_VOLUME_CONTROL, 2, newValue);
+		}
+		
+	}
 				
 	int16_t min_volume_left = get_int16(USB_REQUEST_UAC_GET_MIN, UAC_VOLUME_CONTROL, 1);
 	int16_t max_volume_left = get_int16(USB_REQUEST_UAC_GET_MAX, UAC_VOLUME_CONTROL, 1);

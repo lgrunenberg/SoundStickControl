@@ -5,9 +5,7 @@ I am the proud owner of some really nice looking first revision Harman Kardon So
 
 **Attention: This code is in pre-Alpha stage**
 
-So far only reading of current settings works.
 
 **TODO:**
-* Implement the setting of values
 * Provide a GUI with sliders
 * Integrate the settings into OS X menu bar
